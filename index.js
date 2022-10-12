@@ -68,6 +68,6 @@ expressApp.delete('/account/:guid', (req, res) => {
     return res.send()
 })
 
-expressApp.listen(process.env.PORT, () => {
+expressApp.listen(process.env.PORT || 3000, () => {
     console.log(`Servidor levantado en el ${process.env.PORT}`)
 })
