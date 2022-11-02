@@ -1,5 +1,5 @@
 import express from 'express'
-import { USERS_BBDD } from './../../bd/bbdd.js'
+import userModel from './schemas/user-schema.js'
 
 const accountRouter = express.Router();
 
@@ -10,10 +10,10 @@ accountRouter.use((req, res, next) => {
     next()
 })
 //Obtener los detalles de una cuenta a partir del guid
-accountRouter.get('/:guid', (req, res) => {
+accountRouter.get('/:guid', async (req, res) => {
     const { guid } = req.params;
 
-    const user = USERS_BBDD.find( user => user.guid === guid)
+    const user = await userModel.findById(guid)
     
     if (!user) return res.status(404).send()
 
@@ -21,49 +21,53 @@ accountRouter.get('/:guid', (req, res) => {
 })
 
 //Crear una nueva cuenta
-accountRouter.post('', (req, res) => {
+accountRouter.post('', async (req, res) => {
 
     const { name, guid } = req.body
 
-    if (!name || !guid) return res.status(400).send();
+    if (!name || !guid) return res.status(400).send()
 
-    const user = USERS_BBDD.find( user => user.guid === guid)
+    const user = await userModel.findById(guid).exec()
     
     if (user) return res.status(409).send()
 
-    USERS_BBDD.push({
-        name, guid
+    const newUser = new userModel({
+        _id: guid, name
     })
+    
+    await newUser.save();
 
     return res.send()
 })
 
 //Actualizar el nombre de una cuenta
-accountRouter.put('/:guid', (req, res) => {
+accountRouter.put('/:guid', async (req, res) => {
     const { guid } = req.params
 
     const { name } = req.body
 
     if (!name) return res.status(400).send();
 
-    const user = USERS_BBDD.find( user => user.guid === guid)
+    const user =  await userModel.findById(guid)
     
     if (!user) return res.status(404).send()
 
     user.name = name
 
+    await user.save()
+
     return res.send(user)
 })
 
 //Eliminar una cuenta
-accountRouter.delete('/:guid', (req, res) => {
+accountRouter.delete('/:guid', async (req, res) => {
     const { guid } = req.params;
 
-    const userIndex = USERS_BBDD.findIndex( user => user.guid === guid)
+    const user = await userModel.findById(guid)
     
-    if (userIndex === -1) return res.status(404).send()
+    if (!user) return res.status(404).send()
 
-    USERS_BBDD.splice(userIndex, 1)
+    await user.remove()
 
     return res.send()
 })
